@@ -1,8 +1,7 @@
 #library(tcltk2)
 
-blosum62 = read.table("blosum62.txt", header=TRUE)
+data("blosum62", envir = environment())
 aa.all = rownames(blosum62)
-
 
 PSSMcreator.open = function () {
 
@@ -10,18 +9,61 @@ PSSMcreator.open = function () {
 #require(tcltk2)
 #require(ROC)
 
-assign("positive.whole", NULL, envir = .GlobalEnv)
-assign("positive", NULL, envir = .GlobalEnv)
-assign("negative.whole", NULL, envir = .GlobalEnv)
-assign("negative", NULL, envir = .GlobalEnv)
-assign("PSSM", NULL,  envir = .GlobalEnv)
-assign("pscores", NULL,  envir = .GlobalEnv)
-assign("nscores", NULL,  envir = .GlobalEnv)
-assign("jpscores", NULL,  envir = .GlobalEnv)
-assign("jnscores", NULL,  envir = .GlobalEnv)
-assign("cutoff.score", NULL,  envir = .GlobalEnv)
-assign("unjacked", NULL,  envir = .GlobalEnv)
-assign("jacked", NULL,  envir = .GlobalEnv)
+
+
+
+if(FALSE) {    
+CompEnv = new.env()
+    
+assign("positive.whole", NULL, envir = CompEnv)
+assign("positive", NULL, envir = CompEnv)
+assign("negative.whole", NULL, envir = CompEnv)
+assign("negative", NULL, envir = CompEnv)
+assign("PSSM", NULL,  envir = CompEnv)
+assign("pscores", NULL,  envir = CompEnv)
+assign("nscores", NULL,  envir = CompEnv)
+assign("jpscores", NULL,  envir = CompEnv)
+assign("jnscores", NULL,  envir = CompEnv)
+assign("cutoff.score", NULL,  envir = CompEnv)
+assign("unjacked", NULL,  envir = CompEnv)
+assign("jacked", NULL,  envir = CompEnv)
+}
+
+    positive.whole <- NULL
+    positive <- NULL
+    negative.whole <- NULL
+    negative <- NULL
+    PSSM <- NULL
+    pscores <- NULL
+    nscores <- NULL
+    jpscores <- NULL
+    jnscores <- NULL
+    cutoff.score <- NULL
+    unjacked <- NULL
+    jacked <- NULL
+
+    cutoff.score <- NULL
+
+
+
+reset <-  function(pos = FALSE, neg = FALSE) {
+            if(pos) {
+                positive.whole <<- NULL
+                positive <<- NULL
+            }
+            if(neg) {
+                negative.whole <<- NULL
+                negative <<- NULL
+            }
+            PSSM <<- NULL
+            pscores <<- NULL
+            nscores <<- NULL
+            jpscores <<- NULL
+            jnscores <<- NULL
+            cutoff.score <<- NULL
+            unjacked <<- NULL
+            jacked <<- NULL
+        }
 
 
 
@@ -39,28 +81,14 @@ getposfile = function () {
           add.messages(msg)
      }
 
-	
-	positive.whole = readLines(pos.location)
-	positive.whole = positive.whole[positive.whole != ""]
-#browser()
-	positive.whole = positive.whole[lapply(positive.whole,length)>0]
 
-	positive = as.data.frame(matrix(unlist(strsplit(positive.whole, split="")),
-                              nrow = length(positive.whole), ncol = 11, byrow = TRUE))
-  colnames(positive) = -5:5
-  positive[positive == "."] = NA
+        tmp = readPosFile(pos.location)
 
-  assign("positive.whole", positive.whole, envir = .GlobalEnv)
-	assign("positive", positive, envir = .GlobalEnv)
-	assign("PSSM", NULL,  envir = .GlobalEnv)
-	assign("pscores", NULL,  envir = .GlobalEnv)
-	assign("nscores", NULL,  envir = .GlobalEnv)
-	assign("jpscores", NULL,  envir = .GlobalEnv)
-	assign("jnscores", NULL,  envir = .GlobalEnv)
-	assign("cutoff.score", NULL,  envir = .GlobalEnv)
-	assign("unjacked", NULL,  envir = .GlobalEnv)
-	assign("jacked", NULL,  envir = .GlobalEnv)
-}
+        reset()
+        positive.whole <<- tmp$whole
+        positive <<- tmp$values        
+}	
+
 
 # Input negative sequences
 getnegfile = function () {
@@ -70,26 +98,12 @@ getnegfile = function () {
      } else {
           msg = paste("File for negative sequences: '", neg.location, "' was loaded.\n", sep = "")
           add.messages(msg)
-     }
+      }
 
-	negative.whole = readLines(neg.location)
-	negative.whole = negative.whole[negative.whole != ""]
-	negative.whole = negative.whole[lapply(negative.whole,length)>0]
-  	negative = as.data.frame(matrix(unlist(strsplit(negative.whole, split="")),
-                              nrow = length(negative.whole), ncol = 11, byrow = TRUE))
-  colnames(negative) = -5:5
-  negative[negative == "."] = NA
-
-  assign("negative.whole", negative.whole, envir = .GlobalEnv)
-	assign("negative", negative, envir = .GlobalEnv)
-	assign("PSSM", NULL,  envir = .GlobalEnv)
-	assign("pscores", NULL,  envir = .GlobalEnv)
-	assign("nscores", NULL,  envir = .GlobalEnv)
-	assign("jpscores", NULL,  envir = .GlobalEnv)
-	assign("jnscores", NULL,  envir = .GlobalEnv)
-	assign("cutoff.score", NULL,  envir = .GlobalEnv)
-	assign("unjacked", NULL,  envir = .GlobalEnv)
-	assign("jacked", NULL,  envir = .GlobalEnv)
+     tmp = readPosFile(neg.location)
+     reset()
+     negative.whole <<- tmp$whole
+     negative <<- tmp$values     
 }
 
 # Add messages to message box
@@ -112,7 +126,8 @@ add.results = function(msg) {
 loadb =
 function() {
      file = tclvalue(tkgetOpenFile())
-     load(file, envir = .GlobalEnv)
+     #!!! load(file, envir = .GlobalEnv)
+     load(file, envir = parent.env(environment())) # used to be .GlobalEnv)     
      msg = paste("'", file, "'", " loaded.\n", sep = "")
      add.messages(msg)
 }
@@ -140,8 +155,8 @@ function() {
           answer = tkmessageBox(message = msg,
                          icon = "info", type = "okcancel", default = "ok")
           if(as.character(answer) == "ok") {
-               PSSM = PSSMtable(positive, negative)
-               assign("PSSM", PSSM, envir = .GlobalEnv)
+               PSSM <<- PSSMtable(positive, negative)
+               #!!! assign("PSSM", PSSM, envir = CompEnv)
                msg = paste("p", length(positive.whole),
                               "n", length(negative.whole),
                               " PSSM created successfully.\n", sep = "")
@@ -165,19 +180,10 @@ function() {
      } else {
 #          showData(PSSM, placement="-20+200", maxwidth=80, maxheight=30)
 
-#if(FALSE) {
-          PSSM.values = as.vector(t(round(PSSM, 3)), mode = "character")
-          PSSM.display1 = c(paste(-5:5, collapse = "\t"),
-                         sapply(0:19, function(i) paste(PSSM.values[(i*11+1):((i+1)*11)], collapse = "\t")))
-          temp = c("  ", aa.all)
-          PSSM.display2 = sapply(1:21, function(i) paste(temp[i], PSSM.display1[i], sep = "\t"))
-          PSSM.display3 = sapply(1:21, function(i) paste(PSSM.display2[i], temp[i], sep = "\t"))
-          msg.temp = paste(PSSM.display3, collapse = "\n")
-          msg = paste("p", length(positive.whole),
-                         "n", length(negative.whole),
-                         " PSSM that was created:\n", msg.temp, "\n", sep = "")
+         #if(FALSE) {
+          msg = showPSSM(PSSM)         
           add.results(msg)
-#}
+         #}
 
      }
 }
@@ -190,10 +196,10 @@ function() {
           add.messages(msg)
           tkmessageBox(message = msg, icon = "error", type = "ok")
      } else {
-          pscores = score(positive.whole, PSSM = PSSM)
-          nscores = score(negative.whole, PSSM = PSSM)
-          assign("pscores", pscores, envir = .GlobalEnv)
-          assign("nscores", nscores, envir = .GlobalEnv)
+          pscores <<- score(positive.whole, PSSM = PSSM)
+          nscores <<- score(negative.whole, PSSM = PSSM)
+          #!!! assign("pscores", pscores, envir = CompEnv)
+          #!!! assign("nscores", nscores, envir = CompEnv)
           msg = "Positive and negative sequences scored successfully.\n"
           add.messages(msg)
           tkmessageBox(message = msg, icon = "info", type = "ok")
@@ -203,18 +209,20 @@ function() {
 # Jackknifed scores for positive sequences
 jpscoresb =
 function() {
-     if(is.null(positive) | is.null(negative)) {
+    if(is.null(positive) || is.null(negative)) {
+        #XXX should make this message more informative if only one not loaded.
           msg = "Positive and/or negative sequences incorrectly loaded. Please try loading them again.\n"
           add.messages(msg)
           tkmessageBox(message = msg, icon = "error", type = "ok")
-     } else {
+      } else {
+          #XXX a lot faster these days so these numbers are somewhat misleading.
           msg = "Please wait about 5 minutes.\n"
           add.messages(msg)
           answer = tkmessageBox(message = msg,
                          icon = "info", type = "okcancel", default = "ok")
           if(as.character(answer) != "cancel") {
-               jpscores = jackknife(positive.whole, positive, negative)
-               assign("jpscores", jpscores, envir = .GlobalEnv)
+               jpscores <<- jackknife(positive.whole, positive, negative)
+               #!!! assign("jpscores", jpscores, envir = CompEnv)
                msg = "Jackknifed scores for positive sequences created successfully.\n"
                add.messages(msg)
                tkmessageBox(message = msg, icon = "info", type = "ok")
@@ -232,14 +240,15 @@ function() {
      if(is.null(positive) | is.null(negative)) {
           tkmessageBox(message = "Positive and/or negative sequences incorrectly loaded. Please try loading them again.",
                icon = "error", type = "ok")
-     } else {
+      } else {
+          #XXX time estimates need to be updated.
           msg = "Please wait about half an hour.\n"
           add.messages(msg)
           answer = tkmessageBox(message = msg,
                     icon = "info", type = "okcancel", default = "ok")
           if(as.character(answer) != "cancel") {
-               jnscores = jackknife.neg(negative.whole, positive, negative)
-               assign("jnscores", jnscores, envir = .GlobalEnv)
+               jnscores <<- jackknife.neg(negative.whole, positive, negative)
+               #!!! assign("jnscores", jnscores, envir = CompEnv)
                msg = "Jackknifed scores for negative sequences created successfully.\n"
                add.messages(msg)
                tkmessageBox(message = msg, icon = "info", type = "ok")
@@ -263,17 +272,17 @@ function() {
           answer = tkmessageBox(message = msg,
                          icon = "info", type = "okcancel", default = "ok")
           if(as.character(answer) == "ok") {
-               PSSM = PSSMtable(positive, negative)
-               pscores = score(positive.whole, PSSM = PSSM)
-               nscores = score(negative.whole, PSSM = PSSM)
-               jpscores = jackknife(positive.whole, positive, negative)
-               jnscores = jackknife(negative.whole, positive, negative)
+               PSSM <<- PSSMtable(positive, negative)
+               pscores <<- score(positive.whole, PSSM = PSSM)
+               nscores <<- score(negative.whole, PSSM = PSSM)
+               jpscores <<- jackknife(positive.whole, positive, negative)
+               jnscores <<- jackknife(negative.whole, positive, negative)
 
-               assign("PSSM", PSSM, envir = .GlobalEnv)
-               assign("pscores", pscores, envir = .GlobalEnv)
-               assign("nscores", nscores, envir = .GlobalEnv)
-               assign("jpscores", jpscores, envir = .GlobalEnv)
-               assign("jnscores", jnscores, envir = .GlobalEnv)
+               #!!! assign("PSSM", PSSM, envir = CompEnv)
+               #!!! assign("pscores", pscores, envir = CompEnv)
+               #!!! assign("nscores", nscores, envir = CompEnv)
+               #!!! assign("jpscores", jpscores, envir = CompEnv)
+               #!!! assign("jnscores", jnscores, envir = CompEnv)
 
                msg = paste("p", length(positive.whole),
                               "n", length(negative.whole),
@@ -298,11 +307,11 @@ function() {
      } else {
           cutoffs = numeric(100)
           for(i in 1:100) cutoffs[i] = cutoff(jpscores, jnscores)
-          cutoff.score = mean(cutoffs)
+          cutoff.score <<- mean(cutoffs)
           msg = paste("Cutoff score:", signif(cutoff.score, 3), "\n")
           add.results(msg)
           tkmessageBox(message = msg, icon = "info", type = "ok" )
-          assign("cutoff.score", cutoff.score, envir = .GlobalEnv)
+#!!!       assign("cutoff.score", cutoff.score, envir = CompEnv)
      }
 }
 
@@ -313,8 +322,8 @@ function() {
           msg = "Please find the unjackknifed scores for the positive and negative sequences.\n"
           tkmessageBox(message = msg, icon = "error", type = "ok")
      } else {
-          unjacked = rocdemo.sca(c(rep(1, length(pscores)), rep(0, length(nscores))), c(pscores, nscores), dxrule.sca, caseLabel = "Sulfation", markerLabel = "Unjackknifed Scores")
-          assign("unjacked", unjacked, envir = .GlobalEnv)
+          unjacked <<- rocdemo.sca(c(rep(1, length(pscores)), rep(0, length(nscores))), c(pscores, nscores), dxrule.sca, caseLabel = "Sulfation", markerLabel = "Unjackknifed Scores")
+          #!!! assign("unjacked", unjacked, envir = CompEnv)
           msg = paste("Unjackknifed Scores - ROC Score:", signif(AUC(unjacked), 3), "\n")
           add.results(msg)
           tkmessageBox(message = msg, icon = "info", type = "ok")
@@ -341,8 +350,8 @@ function() {
           add.messages(msg)
           tkmessageBox(message = msg, icon = "error", type = "ok")
      } else {
-          jacked = rocdemo.sca(c(rep(1, length(jpscores)), rep(0, length(jnscores))), c(jpscores, jnscores), dxrule.sca, caseLabel = "Sulfation", markerLabel = "Jackknifed Scores")
-          assign("jacked", jacked, envir = .GlobalEnv)
+          jacked <<- rocdemo.sca(c(rep(1, length(jpscores)), rep(0, length(jnscores))), c(jpscores, jnscores), dxrule.sca, caseLabel = "Sulfation", markerLabel = "Jackknifed Scores")
+          #!!! assign("jacked", jacked, envir = CompEnv)
           msg = paste("Jackknifed Scores - ROC Score:", signif(AUC(jacked), 3), "\n")
           add.results(msg)
           tkmessageBox(message = msg, icon = "info", type = "ok")
