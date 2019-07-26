@@ -7,7 +7,9 @@ PSSMcreator.open = function () {
 
 #require(tcltk)
 #require(tcltk2)
-#require(ROC)
+
+if(!require(ROC))
+    installROC()
 
 
 
