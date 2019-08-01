@@ -2,5 +2,9 @@
 import(tcltk)
 import(tcltk2)
 
-export(PSSMcreator.open)
+export(PSSMcreator.open, PSSM)
+
+# Non-gui version
+export(pssm)
+
 
