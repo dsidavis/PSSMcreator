@@ -1,18 +1,10 @@
-#library(tcltk2)
-
 data("blosum62", envir = environment())
 aa.all = rownames(blosum62)
 
-PSSMcreator.open = function () {
-
-#require(tcltk)
-#require(tcltk2)
+PSSM = PSSMcreator.open = function () {
 
 if(!require(ROC))
     installROC()
-
-
-
 
 if(FALSE) {    
 CompEnv = new.env()
@@ -152,7 +144,7 @@ function() {
           add.messages(msg)
           tkmessageBox(message = msg, icon = "error", type = "ok")
      } else {
-          msg = "Please wait a couple of minutes.\n"
+          msg = "Please wait about 10 seconds.\n"
           add.messages(msg)
           answer = tkmessageBox(message = msg,
                          icon = "info", type = "okcancel", default = "ok")
@@ -183,7 +175,7 @@ function() {
 #          showData(PSSM, placement="-20+200", maxwidth=80, maxheight=30)
 
          #if(FALSE) {
-          msg = showPSSM(PSSM)         
+          msg = showPSSM(PSSM, positive.whole, negative.whole)         
           add.results(msg)
          #}
 
@@ -218,7 +210,7 @@ function() {
           tkmessageBox(message = msg, icon = "error", type = "ok")
       } else {
           #XXX a lot faster these days so these numbers are somewhat misleading.
-          msg = "Please wait about 5 minutes.\n"
+          msg = "Please wait about a minute or less.\n"
           add.messages(msg)
           answer = tkmessageBox(message = msg,
                          icon = "info", type = "okcancel", default = "ok")
@@ -244,7 +236,7 @@ function() {
                icon = "error", type = "ok")
       } else {
           #XXX time estimates need to be updated.
-          msg = "Please wait about half an hour.\n"
+          msg = "Please wait about a few minutes.\n"
           add.messages(msg)
           answer = tkmessageBox(message = msg,
                     icon = "info", type = "okcancel", default = "ok")
@@ -339,7 +331,7 @@ function() {
           msg = "Please find the ROC Score first.\n"
           tkmessageBox(message = msg, icon = "error", type = "ok")
      } else {
-          plot(unjacked, type = "l", lwd = 2, col = "blue", main = "ROC Curve for Unjackknifed Positive and Negative Sites")
+          plot(unjacked, lwd = 2, col = "blue", main = "ROC Curve for Unjackknifed Positive and Negative Sites")
           text(.9, 0, labels = paste("ROC Score =", signif(AUC(unjacked), 3)))
      }
 }
@@ -367,7 +359,7 @@ function() {
           msg = "Please find the ROC Score first.\n"
           tkmessageBox(message = msg, icon = "error", type = "ok")
      } else {
-          plot(jacked, type = "l", lwd = 2, col = "blue", main = "ROC Curve for Jackknifed Positive and Negative Sites")
+          plot(jacked, lwd = 2, col = "blue", main = "ROC Curve for Jackknifed Positive and Negative Sites")
           text(.9, 0, labels = paste("ROC Score =", signif(AUC(jacked), 3)))
      }
 }
@@ -589,6 +581,8 @@ tkpack(main, fill = "both", expand = "yes")
 
 tkconfigure(messages, state="disabled")
 tkconfigure(results, state="disabled")
+
+  list(createpssmb = createpssmb)
 }
 
 
@@ -790,10 +784,4 @@ cutoff = function(jpscores, jnscores, min = -10, max = 10) {
 
      return(cutoff[length(cutoff)])
 }
-
-
-
-
-
-
 
